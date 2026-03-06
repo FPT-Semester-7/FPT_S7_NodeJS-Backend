@@ -1,57 +1,35 @@
-const Booking = require('../models/Booking');
+const bookingService = require('../services/BookingService');
+const BookingDTO = require('../dtos/BookingDTO');
 
 exports.createBooking = async (req, res) => {
     try {
-        const newBooking = await Booking.create(req.body);
-        res.status(201).json({ status: 'success', data: { booking: newBooking } });
+        const sanitizedData = BookingDTO.fromRequest(req.body);
+        const bookingData = { ...sanitizedData, client: req.user.id };
+        const booking = await bookingService.createBooking(bookingData);
+        res.status(201).json({ status: 'success', data: { booking: new BookingDTO(booking) } });
     } catch (err) {
         res.status(400).json({ status: 'fail', message: err.message });
     }
 };
 
-exports.getBookingDetails = async (req, res) => {
+exports.getMyBookings = async (req, res) => {
     try {
-        const booking = await Booking.findById(req.params.id)
-            .populate('mc', 'name avatar')
-            .populate('client', 'name avatar');
-
-        if (!booking) return res.status(404).json({ status: 'fail', message: 'Booking not found' });
-
-        res.status(200).json({ status: 'success', data: { booking } });
+        const bookings = await bookingService.getMyBookings(req.user.id, req.user.role);
+        const formattedBookings = bookings.map(b => new BookingDTO(b));
+        res.status(200).json({ 
+            status: 'success', 
+            results: formattedBookings.length, 
+            data: { bookings: formattedBookings } 
+        });
     } catch (err) {
         res.status(400).json({ status: 'fail', message: err.message });
     }
 };
 
-exports.updateBookingStatus = async (req, res) => {
+exports.payEscrow = async (req, res) => {
     try {
-        const { status, paymentStatus } = req.body;
-
-        // Additional validation logic here depending on user role
-        const booking = await Booking.findByIdAndUpdate(
-            req.params.id,
-            { status, paymentStatus },
-            { new: true, runValidators: true }
-        );
-
-        if (!booking) return res.status(404).json({ status: 'fail', message: 'Booking not found' });
-
-        res.status(200).json({ status: 'success', data: { booking } });
-    } catch (err) {
-        res.status(400).json({ status: 'fail', message: err.message });
-    }
-};
-
-exports.getUserBookings = async (req, res) => {
-    try {
-        const { userId, role } = req.query; // in real app get from req.user
-
-        let query = {};
-        if (role === 'mc') query.mc = userId;
-        else if (role === 'client') query.client = userId;
-
-        const bookings = await Booking.find(query).populate('mc', 'name').populate('client', 'name');
-        res.status(200).json({ status: 'success', results: bookings.length, data: { bookings } });
+        const booking = await bookingService.processEscrowPayment(req.params.id, req.body);
+        res.status(200).json({ status: 'success', data: { booking: new BookingDTO(booking) } });
     } catch (err) {
         res.status(400).json({ status: 'fail', message: err.message });
     }
