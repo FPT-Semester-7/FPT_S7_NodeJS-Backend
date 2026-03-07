@@ -28,6 +28,8 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const publicRoutes = require('./routes/publicRoutes');
+const scriptRoutes = require('./routes/scriptRoutes');
 
 // Set up routes
 app.use('/api/v1/auth', authRoutes);
@@ -36,6 +38,8 @@ app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/public', publicRoutes);
+app.use('/api/v1/scripts', scriptRoutes);
 
 
 // Database connection
