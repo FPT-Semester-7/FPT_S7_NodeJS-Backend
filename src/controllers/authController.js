@@ -77,3 +77,26 @@ exports.submitKYC = async (req, res) => {
     }
 };
 
+// Cập nhật ảnh đại diện người dùng
+exports.updateAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ status: 'fail', message: 'Vui lòng chọn ảnh để tải lên' });
+        }
+        
+        // req.file.path sẽ chứa URL của ảnh trên Cloudinary
+        const user = await authService.updateAvatar(req.user.id, req.file.path);
+        
+        res.status(200).json({
+            status: 'success',
+            message: 'Cập nhật ảnh đại diện thành công',
+            data: {
+                avatarUrl: req.file.path,
+                user: new UserDTO(user)
+            }
+        });
+    } catch (err) {
+        res.status(400).json({ status: 'fail', message: err.message });
+    }
+};
+

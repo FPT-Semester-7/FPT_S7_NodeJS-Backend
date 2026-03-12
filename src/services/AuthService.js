@@ -54,6 +54,10 @@ class AuthService {
   async submitKYC(userId, kycData) {
     return await userRepository.setKYC(userId, kycData);
   }
+    // Cập nhật ảnh đại diện
+    async updateAvatar(userId, avatarUrl) {
+        return await userRepository.update(userId, { avatar: avatarUrl });
+    }
 }
 
 module.exports = new AuthService();
