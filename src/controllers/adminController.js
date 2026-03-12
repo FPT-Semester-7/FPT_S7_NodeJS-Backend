@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Booking = require('../models/Booking');
+const Transaction = require('../models/Transaction');
 
 exports.getAllUsers = async (req, res) => {
     try {
@@ -27,6 +28,15 @@ exports.getAllBookings = async (req, res) => {
     try {
         const bookings = await Booking.find().populate('mc').populate('client');
         res.status(200).json({ status: 'success', results: bookings.length, data: { bookings } });
+    } catch (err) {
+        res.status(400).json({ status: 'fail', message: err.message });
+    }
+};
+
+exports.getAllTransactions = async (req, res) => {
+    try {
+        const transactions = await Transaction.find().populate('mc').populate('client');
+        res.status(200).json({ status: 'success', results: transactions.length, data: { transactions } });
     } catch (err) {
         res.status(400).json({ status: 'fail', message: err.message });
     }

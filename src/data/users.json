@@ -4,6 +4,7 @@
     "email": "admin@mchub.com",
     "password": "password123",
     "role": "admin",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -12,6 +13,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234561",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -20,6 +22,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234562",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -28,6 +31,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234563",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -36,6 +40,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234564",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -44,6 +49,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234565",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -52,6 +58,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234566",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -60,6 +67,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234567",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310650/mc_hub_mock/v653l3chkevvsvt4yibk.png",
     "isVerified": true
   },
   {
@@ -68,6 +76,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234568",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png",
     "isVerified": true
   },
   {
@@ -76,6 +85,7 @@
     "password": "password123",
     "role": "mc",
     "phoneNumber": "0901234569",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310648/mc_hub_mock/rkkcvu0gydd7atnahwn3.png",
     "isVerified": true
   },
   {
@@ -83,34 +93,39 @@
     "email": "client.an@gmail.com",
     "password": "password123",
     "role": "client",
-    "phoneNumber": "0988123451"
+    "phoneNumber": "0988123451",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png"
   },
   {
     "name": "Le Thi Binh",
     "email": "client.binh@gmail.com",
     "password": "password123",
     "role": "client",
-    "phoneNumber": "0988123452"
+    "phoneNumber": "0988123452",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310648/mc_hub_mock/rkkcvu0gydd7atnahwn3.png"
   },
   {
     "name": "Tran Van Cuong",
     "email": "client.cuong@gmail.com",
     "password": "password123",
     "role": "client",
-    "phoneNumber": "0988123453"
+    "phoneNumber": "0988123453",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png"
   },
   {
     "name": "Pham Minh Duc",
     "email": "client.duc@gmail.com",
     "password": "password123",
     "role": "client",
-    "phoneNumber": "0988123454"
+    "phoneNumber": "0988123454",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310649/mc_hub_mock/omk7j0jqolc4q2dknh9q.png"
   },
   {
     "name": "Hoang Thi En",
     "email": "client.en@gmail.com",
     "password": "password123",
     "role": "client",
-    "phoneNumber": "0988123455"
+    "phoneNumber": "0988123455",
+    "avatar": "https://res.cloudinary.com/dvwt6npcl/image/upload/v1773310650/mc_hub_mock/v653l3chkevvsvt4yibk.png"
   }
 ]
