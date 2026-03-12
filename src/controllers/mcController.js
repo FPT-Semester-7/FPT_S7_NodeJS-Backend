@@ -1,7 +1,13 @@
+/**
+ * @file mcController.js
+ * @description Bộ điều khiển xử lý các chức năng quản lý cá nhân dành cho thành viên vai trò MC.
+ */
+
 const mcService = require('../services/MCService');
 const MCProfileDTO = require('../dtos/MCProfileDTO');
 const TransactionDTO = require('../dtos/TransactionDTO');
 
+// Lấy thông tin tổng quan của Dashboard MC
 exports.getDashboard = async (req, res) => {
     try {
         const stats = await mcService.getDashboardStats(req.user.id);
@@ -11,6 +17,7 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
+// Cập nhật hồ sơ năng lực (Onboarding/Update)
 exports.updateProfile = async (req, res) => {
     try {
         const sanitizedData = MCProfileDTO.fromOnboardingRequest(req.body);
@@ -21,6 +28,7 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
+// Lấy danh sách lịch trình làm việc
 exports.getCalendar = async (req, res) => {
     try {
         const calendar = await mcService.getCalendar(req.user.id);
@@ -30,6 +38,7 @@ exports.getCalendar = async (req, res) => {
     }
 };
 
+// Khóa một ngày bận trên lịch
 exports.blockDate = async (req, res) => {
     try {
         const schedule = await mcService.blockDate(req.user.id, req.body);
@@ -39,6 +48,7 @@ exports.blockDate = async (req, res) => {
     }
 };
 
+// Lấy thông tin ví và lịch sử giao dịch
 exports.getWallet = async (req, res) => {
     try {
         const wallet = await mcService.getWallet(req.user.id);
@@ -55,6 +65,7 @@ exports.getWallet = async (req, res) => {
     }
 };
 
+// Yêu cầu rút tiền từ tài khoản
 exports.requestPayout = async (req, res) => {
     try {
         const transaction = await mcService.requestPayout(req.user.id, req.body.amount);
@@ -63,3 +74,4 @@ exports.requestPayout = async (req, res) => {
         res.status(400).json({ status: 'fail', message: err.message });
     }
 };
+
