@@ -1,0 +1,116 @@
+[
+  {
+    "name": "Admin MC Hub",
+    "email": "admin@mchub.com",
+    "password": "password123",
+    "role": "admin",
+    "isVerified": true
+  },
+  {
+    "name": "Tran Thanh",
+    "email": "mc.tranthanh@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234561",
+    "isVerified": true
+  },
+  {
+    "name": "Truong Giang",
+    "email": "mc.truonggiang@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234562",
+    "isVerified": true
+  },
+  {
+    "name": "Thanh Bach",
+    "email": "mc.thanhbach@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234563",
+    "isVerified": true
+  },
+  {
+    "name": "Quyen Linh",
+    "email": "mc.quyenlinh@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234564",
+    "isVerified": true
+  },
+  {
+    "name": "Dai Nghia",
+    "email": "mc.dainghia@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234565",
+    "isVerified": true
+  },
+  {
+    "name": "Nguyen Khang",
+    "email": "mc.nguyenkhang@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234566",
+    "isVerified": true
+  },
+  {
+    "name": "Khanh Vy",
+    "email": "mc.khanhvy@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234567",
+    "isVerified": true
+  },
+  {
+    "name": "Tran Ngoc",
+    "email": "mc.tranngoc@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234568",
+    "isVerified": true
+  },
+  {
+    "name": "Phi Linh",
+    "email": "mc.philinh@gmail.com",
+    "password": "password123",
+    "role": "mc",
+    "phoneNumber": "0901234569",
+    "isVerified": true
+  },
+  {
+    "name": "Nguyen Van An",
+    "email": "client.an@gmail.com",
+    "password": "password123",
+    "role": "client",
+    "phoneNumber": "0988123451"
+  },
+  {
+    "name": "Le Thi Binh",
+    "email": "client.binh@gmail.com",
+    "password": "password123",
+    "role": "client",
+    "phoneNumber": "0988123452"
+  },
+  {
+    "name": "Tran Van Cuong",
+    "email": "client.cuong@gmail.com",
+    "password": "password123",
+    "role": "client",
+    "phoneNumber": "0988123453"
+  },
+  {
+    "name": "Pham Minh Duc",
+    "email": "client.duc@gmail.com",
+    "password": "password123",
+    "role": "client",
+    "phoneNumber": "0988123454"
+  },
+  {
+    "name": "Hoang Thi En",
+    "email": "client.en@gmail.com",
+    "password": "password123",
+    "role": "client",
+    "phoneNumber": "0988123455"
+  }
+]

@@ -1,59 +1,218 @@
 # The MC Hub - API Documentation
 
-## Authentication & Onboarding
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| POST | `/api/v1/auth/register` | Register as MC or Client | Screen 2 |
-| POST | `/api/v1/auth/login` | Login to the system | Screen 2 |
-| PUT | `/api/v1/mc/onboarding` | Complete MC profile setup | Screen 3 |
+Hệ thống cung cấp các API để kết nối khách hàng và người dẫn chương trình (MC). Tất cả yêu cầu và phản hồi đều sử dụng định dạng dữ liệu **JSON**.
 
-## Marketing & Public Discovery
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| GET | `/api/v1/public/landing` | Get landing page data (stats, hero) | Screen 1 |
-| GET | `/api/v1/public/mcs` | Search and filter MCs | Screen 8 |
-| GET | `/api/v1/public/mcs/:id` | Get MC public profile and showreel | Screen 9 |
+---
 
-## MC Dashboard & Talent Side
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| GET | `/api/v1/mc/dashboard` | Get summary stats for MC | Screen 4 |
-| GET | `/api/v1/mc/calendar` | Get availability and bookings | Screen 7 |
-| POST | `/api/v1/mc/calendar/blockout` | Set manual blackout dates | Screen 7 |
+## 1. Authentication (Xác thực)
 
-## Script Library & Reader
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| GET | `/api/v1/scripts` | Browse/Search scripts | Screen 5 |
-| GET | `/api/v1/scripts/:id` | Get script content for reader | Screen 6 |
-| POST | `/api/v1/scripts/favorite/:id` | Add script to favorites | Screen 5 |
-| GET | `/api/v1/scripts/:id/download` | Download script (PDF/Docx) | Screen 5 |
+### Đăng ký tài khoản
+*   **Endpoint:** `/api/v1/auth/register`
+*   **Method:** `POST`
+*   **Request Body:**
+```json
+{
+  "name": "Nguyen Van A",
+  "email": "mc.an@example.com",
+  "password": "password123",
+  "role": "mc",
+  "phoneNumber": "0901234567"
+}
+```
+*   **Response (201 Created):**
+```json
+{
+  "status": "success",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "data": {
+    "user": {
+      "id": "65f1e...",
+      "name": "Nguyen Van A",
+      "email": "mc.an@example.com",
+      "role": "mc",
+      "isVerified": false
+    }
+  }
+}
+```
 
-## Bookings & Payments
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| POST | `/api/v1/bookings` | Create a booking & brief | Screen 10 |
-| POST | `/api/v1/bookings/escrow/pay` | Secure payment via Escrow | Screen 10 |
-| GET | `/api/v1/mc/wallet` | Check earnings and transactions | Screen 14 |
-| POST | `/api/v1/mc/wallet/payout` | Request payout for available funds | Screen 14 |
+### Đăng nhập
+*   **Endpoint:** `/api/v1/auth/login`
+*   **Method:** `POST`
+*   **Request Body:**
+```json
+{
+  "email": "mc.an@example.com",
+  "password": "password123"
+}
+```
+*   **Response (200 OK):**
+```json
+{
+  "status": "success",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "data": {
+    "user": {
+      "id": "65f1e...",
+      "name": "Nguyen Van A",
+      "role": "mc"
+    }
+  }
+}
+```
 
-## Communication
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| GET | `/api/v1/messages` | List conversations | Screen 11 |
-| GET | `/api/v1/messages/:bookingId`| Get chat history | Screen 11 |
-| POST | `/api/v1/messages` | Send message/file | Screen 11 |
-| GET | `/api/v1/notifications` | Get system/payment notifications | Screen 12 |
+---
 
-## Feedback & Reviews
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| POST | `/api/reviews` | Submit post-event review | Screen 13 |
+## 2. MC Talent Side (Dành cho MC)
 
-## Settings & Career
-| Method | Endpoint | Description | Screen |
-|--------|----------|-------------|--------|
-| POST | `/api/user/kyc` | Upload ID and selfie for verification | Screen 15 |
-| PUT | `/api/user/settings` | Update security & account info | Screen 15 |
-| GET | `/api/learning` | Get career roadmap articles | Screen 16 |
-| GET | `/api/resources` | Download contract templates/checklists | Screen 18 |
+### Cập nhật hồ sơ năng lực (Onboarding)
+*   **Endpoint:** `/api/v1/mcs/onboarding`
+*   **Method:** `PUT` (Yêu cầu Token)
+*   **Request Body:**
+```json
+{
+  "experience": 5,
+  "niche": "Wedding",
+  "languages": ["Vietnamese", "English"],
+  "media": [
+    { "url": "https://img.com/hero.jpg", "type": "image" }
+  ]
+}
+```
+*   **Response (200 OK):**
+```json
+{
+  "status": "success",
+  "data": {
+    "profile": {
+      "experience": 5,
+      "eventTypes": ["Wedding"],
+      "status": "Available"
+    }
+  }
+}
+```
+
+### Dashboard Thống kê
+*   **Endpoint:** `/api/v1/mcs/dashboard`
+*   **Method:** `GET` (Yêu cầu Token)
+*   **Response (200 OK):**
+```json
+{
+  "status": "success",
+  "data": {
+    "profileStatus": "Available",
+    "completionPercentage": 85,
+    "stats": {
+      "totalBookings": 12,
+      "revenue": 50000000
+    }
+  }
+}
+```
+
+---
+
+## 3. Public Discovery (Khám phá công khai)
+
+### Tìm kiếm MC
+*   **Endpoint:** `/api/v1/public/mcs`
+*   **Method:** `GET`
+*   **Query Params:** `?region=Hanoi&style=Fun`
+*   **Response (200 OK):**
+```json
+{
+  "status": "success",
+  "results": 1,
+  "data": [
+    {
+      "id": "65f1f...",
+      "user": { "name": "Tran Thanh", "avatar": "tt.jpg" },
+      "experience": 10,
+      "rating": 4.9
+    }
+  ]
+}
+```
+
+---
+
+## 4. Bookings (Đặt lịch)
+
+### Tạo yêu cầu đặt lịch
+*   **Endpoint:** `/api/v1/bookings`
+*   **Method:** `POST` (Yêu cầu Token Client)
+*   **Request Body:**
+```json
+{
+  "mcId": "65f1f...",
+  "eventDate": "2024-12-25T18:00:00Z",
+  "venue": "Grand Plaza Hotel",
+  "duration": "4h",
+  "totalPrice": 10000000,
+  "requirements": "Dẫn đám cưới phong cách hiện đại"
+}
+```
+*   **Response (201 Created):**
+```json
+{
+  "status": "success",
+  "data": {
+    "booking": {
+      "id": "65f2a...",
+      "status": "Pending",
+      "totalPrice": 10000000
+    }
+  }
+}
+```
+
+---
+
+## 5. Scripts Library (Thư viện kịch bản)
+
+### Danh sách kịch bản
+*   **Endpoint:** `/api/v1/scripts`
+*   **Method:** `GET`
+*   **Response (200 OK):**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "65f3c...",
+      "title": "Kịch bản tiệc tất niên",
+      "category": "Corporate",
+      "isPremium": false
+    }
+  ]
+}
+```
+
+---
+
+## 6. Feedback & Settings
+
+### Gửi đánh giá
+*   **Endpoint:** `/api/v1/reviews`
+*   **Method:** `POST`
+*   **Request Body:**
+```json
+{
+  "bookingId": "65f2a...",
+  "rating": 5,
+  "comment": "Rất hài lòng với phần dẫn dắt của MC"
+}
+```
+
+### Xác minh KYC
+*   **Endpoint:** `/api/v1/auth/kyc`
+*   **Method:** `POST`
+*   **Request Body:**
+```json
+{
+  "idNumber": "00123456789",
+  "selfieUrl": "https://img.com/selfie.jpg",
+  "idCardFront": "https://img.com/front.jpg"
+}
+```
