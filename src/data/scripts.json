@@ -1,0 +1,84 @@
+[
+  {
+    "title": "Kịch bản Đám cưới Hiện đại",
+    "category": "Wedding",
+    "tone": "Warm/Romantic",
+    "language": "Vietnamese",
+    "content": "Chào mừng quý vị đến với lễ thành hôn của...",
+    "duration": "45 mins"
+  },
+  {
+    "title": "Corporate Gala Dinner",
+    "category": "Corporate",
+    "tone": "Formal/Professional",
+    "language": "English/Vietnamese",
+    "content": "Ladies and Gentlemen, welcome to the Annual Gala...",
+    "duration": "120 mins",
+    "isPremium": true
+  },
+  {
+    "title": "Lễ hội Âm nhạc Ngoài trời",
+    "category": "Entertainment",
+    "tone": "High Energy",
+    "language": "Vietnamese",
+    "content": "Các bạn đã sẵn sàng cháy hết mình chưa nào?!",
+    "duration": "180 mins"
+  },
+  {
+    "title": "Kịch bản Tiệc tất niên Công ty",
+    "category": "Corporate",
+    "tone": "Funny/Friendly",
+    "language": "Vietnamese",
+    "content": "Một năm vừa qua chúng ta đã nỗ lực hết mình...",
+    "duration": "90 mins"
+  },
+  {
+    "title": "Sports Event Commentary",
+    "category": "Sports",
+    "tone": "Exciting",
+    "language": "English",
+    "content": "Welcome to the final match of the season!",
+    "duration": "60 mins"
+  },
+  {
+    "title": "Lễ Khai trương Showroom",
+    "category": "Corporate",
+    "tone": "Formal",
+    "language": "Vietnamese",
+    "content": "Kính thưa các vị đại biểu, các vị khách quý...",
+    "duration": "30 mins"
+  },
+  {
+    "title": "Toddler's Birthday Party",
+    "category": "Entertainment",
+    "tone": "Funny/Caring",
+    "language": "Vietnamese",
+    "content": "Chúc mừng sinh nhật bé yêu, chúng ta cùng hát nào!",
+    "duration": "60 mins"
+  },
+  {
+    "title": "International Conference Opening",
+    "category": "Corporate",
+    "tone": "Diplomatic",
+    "language": "English",
+    "content": "Honorable guests, distinguished speakers...",
+    "duration": "45 mins",
+    "isPremium": true
+  },
+  {
+    "title": "Kịch bản Talkshow Truyền hình",
+    "category": "Media",
+    "tone": "Engaging",
+    "language": "Vietnamese",
+    "content": "Chào mừng quý vị quay trở lại với chương trình...",
+    "duration": "30 mins"
+  },
+  {
+    "title": "Auction Event MC Script",
+    "category": "Entertainment",
+    "tone": "Persuasive",
+    "language": "Vietnamese",
+    "content": "Vâng, giá khởi điểm là 10 triệu đồng, ai cao hơn không ạ?",
+    "duration": "120 mins"
+  }
+]
