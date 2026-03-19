@@ -2,7 +2,7 @@ const bookingRepository = require("../repositories/BookingRepository");
 const scheduleRepository = require("../repositories/ScheduleRepository");
 const transactionRepository = require("../repositories/TransactionRepository");
 const mcProfileRepository = require("../repositories/MCProfileRepository");
-const Notification = require("../models/Notification");
+const notificationService = require("./NotificationService");
 
 const combineDateAndTime = (dateValue, timeValue) => {
   const date = new Date(dateValue);
@@ -14,6 +14,13 @@ const combineDateAndTime = (dateValue, timeValue) => {
 };
 
 class BookingService {
+  /**
+   * Inject io instance for real-time notifications
+   */
+  setIO(io) {
+    this._io = io;
+  }
+
   async createBooking(bookingData) {
     const profile = await mcProfileRepository.findByIdentifier(bookingData.mc);
     if (!profile) {
@@ -81,13 +88,19 @@ class BookingService {
 
     const booking = await bookingRepository.create(normalizedBooking);
 
-    await Notification.create({
-      user: mcId,
-      title: "New booking request",
-      body: `${booking.client?.name || "A client"} requested ${booking.eventType} on ${new Date(booking.eventDate).toLocaleDateString()}`,
-      type: "Booking",
-      linkAction: `/m/calendar?booking=${booking._id}`,
-    });
+    await notificationService.create(
+      {
+        user: mcId,
+        senderId: bookingData.client,
+        title: "New booking request",
+        body: `You have a new ${booking.eventType} booking request on ${new Date(booking.eventDate).toLocaleDateString()}`,
+        type: "Booking",
+        relatedId: booking._id,
+        relatedModel: "Booking",
+        linkAction: `/m/booking-requests`,
+      },
+      this._io,
+    );
 
     return booking;
   }
@@ -96,7 +109,6 @@ class BookingService {
     const booking = await bookingRepository.findById(bookingId);
     if (!booking) throw new Error("Booking not found");
 
-    // Logic to interact with payment gateway (mocked)
     await transactionRepository.create({
       booking: booking._id,
       client: booking.client._id || booking.client,
@@ -107,9 +119,31 @@ class BookingService {
       transactionId: paymentDetails?.transactionId,
     });
 
-    return await bookingRepository.updateStatus(bookingId, booking.status, {
-      paymentStatus: "DepositPaid",
-    });
+    const updated = await bookingRepository.updateStatus(
+      bookingId,
+      booking.status,
+      {
+        paymentStatus: "DepositPaid",
+      },
+    );
+
+    // Notify MC about escrow payment
+    const mcId = booking.mc?._id || booking.mc;
+    await notificationService.create(
+      {
+        user: mcId,
+        senderId: booking.client._id || booking.client,
+        title: "Escrow funds secured",
+        body: `Payment of ${booking.price?.toLocaleString()} VND for "${booking.eventName}" is now held in escrow.`,
+        type: "Payment",
+        relatedId: booking._id,
+        relatedModel: "Booking",
+        linkAction: `/m/calendar?booking=${booking._id}`,
+      },
+      this._io,
+    );
+
+    return updated;
   }
 
   async getMyBookings(userId, role) {
@@ -155,13 +189,20 @@ class BookingService {
       note: updated.eventName,
     });
 
-    await Notification.create({
-      user: updated.client._id || updated.client,
-      title: "Booking accepted",
-      body: `${updated.mc?.name || "Your MC"} accepted your booking request for ${updated.eventName}`,
-      type: "Booking",
-      linkAction: `/m/booking/${updated.mc?._id || updated.mc}`,
-    });
+    const clientId = updated.client._id || updated.client;
+    await notificationService.create(
+      {
+        user: clientId,
+        senderId: mcId,
+        title: "Booking accepted",
+        body: `Your booking request for "${updated.eventName}" has been accepted!`,
+        type: "Booking",
+        relatedId: updated._id,
+        relatedModel: "Booking",
+        linkAction: `/m/booking/${updated.mc?._id || updated.mc}`,
+      },
+      this._io,
+    );
 
     return updated;
   }
@@ -187,13 +228,20 @@ class BookingService {
       { decidedAt: new Date() },
     );
 
-    await Notification.create({
-      user: updated.client._id || updated.client,
-      title: "Booking declined",
-      body: `${updated.mc?.name || "The MC"} declined your booking request for ${updated.eventName}`,
-      type: "Booking",
-      linkAction: `/m/profile/${updated.mc?._id || updated.mc}`,
-    });
+    const clientId = updated.client._id || updated.client;
+    await notificationService.create(
+      {
+        user: clientId,
+        senderId: mcId,
+        title: "Booking declined",
+        body: `Your booking request for "${updated.eventName}" has been declined.`,
+        type: "Booking",
+        relatedId: updated._id,
+        relatedModel: "Booking",
+        linkAction: `/m/profile/${updated.mc?._id || updated.mc}`,
+      },
+      this._io,
+    );
 
     return updated;
   }

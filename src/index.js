@@ -10,6 +10,7 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const http = require("http");
 const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 
 // Nạp các biến môi trường từ file .env
 dotenv.config();
@@ -25,6 +26,9 @@ const io = new Server(server, {
   },
 });
 
+// Store io instance on app for use in controllers
+app.set("io", io);
+
 // --- Cấu hình Middleware ---
 app.use(cors()); // Cho phép chia sẻ tài nguyên giữa các domain khác nhau
 app.use(express.json()); // Cho phép server đọc dữ liệu định dạng JSON từ Request Body
@@ -39,6 +43,8 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const publicRoutes = require("./routes/publicRoutes");
 const scriptRoutes = require("./routes/scriptRoutes");
 const availabilityRoutes = require("./routes/availabilityRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const conversationRoutes = require("./routes/conversationRoutes");
 
 // --- Cài đặt các API Endpoints (Phiên bản v1) ---
 app.use("/api/v1/auth", authRoutes); // Xác thực và thông tin cá nhân
@@ -50,6 +56,8 @@ app.use("/api/v1/payments", paymentRoutes); // Quản lý giao dịch và thanh 
 app.use("/api/v1/public", publicRoutes); // Dữ liệu công khai cho trang chủ/tìm kiếm
 app.use("/api/v1/scripts", scriptRoutes); // Quản lý thư viện kịch bản
 app.use("/api/v1/availability", availabilityRoutes); // Lịch rảnh/bận của MC
+app.use("/api/v1/notifications", notificationRoutes); // Thông báo
+app.use("/api/v1/conversations", conversationRoutes); // Chat / Tin nhắn
 
 /**
  * @function connectDB
@@ -79,27 +87,109 @@ app.get("/", (req, res) => {
 });
 
 /**
- * Cấu hình sự kiện Socket.io cho Chat
- * Xử lý kết nối, tham gia phòng chat và gửi tin nhắn.
+ * Track online users: userId -> Set of socket IDs
+ */
+const onlineUsers = new Map();
+
+/**
+ * Cấu hình sự kiện Socket.io
+ * Xử lý xác thực, kết nối phòng chat, gửi tin nhắn và thông báo.
  */
 io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log(`Socket connected: ${socket.id}`);
 
-  // Tham gia vào phòng chat dựa trên Booking ID
-  socket.on("join_chat", (bookingId) => {
-    socket.join(bookingId);
-    console.log(`User joined chat room: ${bookingId}`);
+  // Authenticate and join user's room for notifications
+  const token = socket.handshake.auth?.token;
+  let userId = null;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "secret-fallback",
+      );
+      userId = decoded.id;
+      socket.userId = userId;
+
+      // Join user's personal notification room
+      socket.join(`user_${userId}`);
+
+      // Track online status
+      if (!onlineUsers.has(userId)) {
+        onlineUsers.set(userId, new Set());
+      }
+      onlineUsers.get(userId).add(socket.id);
+
+      // Broadcast online status
+      io.emit("user_online", { userId });
+
+      console.log(`User ${userId} authenticated (socket: ${socket.id})`);
+    } catch (err) {
+      console.log(`Invalid token for socket ${socket.id}`);
+    }
+  }
+
+  // Join a conversation room
+  socket.on("join_conversation", (conversationId) => {
+    socket.join(`conversation_${conversationId}`);
+    console.log(`Socket ${socket.id} joined conversation: ${conversationId}`);
   });
 
-  // Xử lý gửi tin nhắn tới các thành viên trong phòng
+  // Leave a conversation room
+  socket.on("leave_conversation", (conversationId) => {
+    socket.leave(`conversation_${conversationId}`);
+  });
+
+  // Handle send_message (real-time relay — actual persistence is in the REST API)
   socket.on("send_message", (data) => {
-    // data dự kiến chứa: { bookingId, senderId, receiverId, content, attachments }
-    // TODO: Lưu vào Database thông qua Message model trước khi gửi đi
-    io.to(data.bookingId).emit("receive_message", data);
+    // data: { conversationId, message }
+    if (data.conversationId) {
+      socket
+        .to(`conversation_${data.conversationId}`)
+        .emit("new_message", data.message);
+    }
+  });
+
+  // Typing indicators
+  socket.on("typing", (data) => {
+    // data: { conversationId, userId, name }
+    if (data.conversationId) {
+      socket
+        .to(`conversation_${data.conversationId}`)
+        .emit("user_typing", data);
+    }
+  });
+
+  socket.on("stop_typing", (data) => {
+    if (data.conversationId) {
+      socket
+        .to(`conversation_${data.conversationId}`)
+        .emit("user_stop_typing", data);
+    }
+  });
+
+  // Get online status of specific users
+  socket.on("check_online", (userIds) => {
+    const result = {};
+    for (const id of userIds) {
+      result[id] = onlineUsers.has(id) && onlineUsers.get(id).size > 0;
+    }
+    socket.emit("online_status", result);
   });
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
+    console.log(`Socket disconnected: ${socket.id}`);
+
+    if (userId) {
+      const sockets = onlineUsers.get(userId);
+      if (sockets) {
+        sockets.delete(socket.id);
+        if (sockets.size === 0) {
+          onlineUsers.delete(userId);
+          io.emit("user_offline", { userId });
+        }
+      }
+    }
   });
 });
 
