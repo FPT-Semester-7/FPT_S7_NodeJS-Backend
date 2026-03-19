@@ -3,6 +3,7 @@ const BookingDTO = require("../dtos/BookingDTO");
 
 exports.createBooking = async (req, res) => {
   try {
+    bookingService.setIO(req.app.get("io"));
     const sanitizedData = BookingDTO.fromRequest(req.body);
     const bookingData = { ...sanitizedData, client: req.user.id };
     const booking = await bookingService.createBooking(bookingData);
@@ -59,6 +60,7 @@ exports.getMCBookings = async (req, res) => {
 
 exports.acceptBooking = async (req, res) => {
   try {
+    bookingService.setIO(req.app.get("io"));
     const booking = await bookingService.acceptBooking(
       req.params.id,
       req.user.id,
@@ -73,6 +75,7 @@ exports.acceptBooking = async (req, res) => {
 
 exports.rejectBooking = async (req, res) => {
   try {
+    bookingService.setIO(req.app.get("io"));
     const booking = await bookingService.rejectBooking(
       req.params.id,
       req.user.id,
@@ -87,6 +90,7 @@ exports.rejectBooking = async (req, res) => {
 
 exports.payEscrow = async (req, res) => {
   try {
+    bookingService.setIO(req.app.get("io"));
     const booking = await bookingService.processEscrowPayment(
       req.params.id,
       req.body,
