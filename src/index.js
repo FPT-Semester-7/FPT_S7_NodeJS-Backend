@@ -18,11 +18,31 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : ["http://localhost:5173"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
 // Khởi tạo Socket.io để xử lý Chat thời gian thực
 const io = new Server(server, {
   cors: {
-    origin: "*", // Cho phép tất cả các nguồn truy cập (Cần siết lại khi Production)
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -30,7 +50,6 @@ const io = new Server(server, {
 app.set("io", io);
 
 // --- Cấu hình Middleware ---
-app.use(cors()); // Cho phép chia sẻ tài nguyên giữa các domain khác nhau
 app.use(express.json()); // Cho phép server đọc dữ liệu định dạng JSON từ Request Body
 
 // --- Khai báo các Routes (Đường dẫn API) ---
