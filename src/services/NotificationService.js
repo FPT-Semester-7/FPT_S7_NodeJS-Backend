@@ -22,17 +22,19 @@ class NotificationService {
    */
   async getByUserId(userId, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
-    const [notifications, total] = await Promise.all([
+    const [notifications, total, totalUnread] = await Promise.all([
       Notification.find({ user: userId })
         .populate("senderId", "name avatar")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
       Notification.countDocuments({ user: userId }),
+      Notification.countDocuments({ user: userId, isRead: false }),
     ]);
 
     return {
       notifications,
+      totalUnread,
       total,
       page,
       pages: Math.ceil(total / limit),
