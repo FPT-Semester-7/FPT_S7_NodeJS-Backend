@@ -14,24 +14,6 @@ exports.getConversations = async (req, res) => {
   }
 };
 
-exports.getOrCreateConversation = async (req, res) => {
-  try {
-    const { userId } = req.body;
-    if (!userId) {
-      return res
-        .status(400)
-        .json({ status: "fail", message: "userId is required" });
-    }
-    const conversation = await chatService.getOrCreateConversation(
-      req.user.id,
-      userId,
-    );
-    res.status(200).json({ status: "success", data: { conversation } });
-  } catch (err) {
-    res.status(400).json({ status: "fail", message: err.message });
-  }
-};
-
 exports.getMessages = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -42,6 +24,16 @@ exports.getMessages = async (req, res) => {
       page,
       limit,
     );
+
+    // Emit read event so sender sees read receipts
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`conversation_${req.params.id}`).emit("messages_read", {
+        conversationId: req.params.id,
+        userId: req.user.id,
+      });
+    }
+
     res.status(200).json({ status: "success", data: result });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
@@ -64,7 +56,7 @@ exports.sendMessage = async (req, res) => {
       type || "text",
     );
 
-    // Emit via socket.io
+    // Emit via socket.io to conversation room
     const io = req.app.get("io");
     if (io) {
       io.to(`conversation_${req.params.id}`).emit("new_message", message);
@@ -78,11 +70,12 @@ exports.sendMessage = async (req, res) => {
           {
             user: recipientId,
             senderId: req.user.id,
-            title: "New message",
+            title: "New Message",
             body: content.substring(0, 100),
-            type: "Chat",
+            type: "message_received",
             relatedId: conversation._id,
             relatedModel: "Conversation",
+            linkAction: `/m/messaging`,
           },
           io,
         );
@@ -102,7 +95,7 @@ exports.markAsRead = async (req, res) => {
     // Emit read event via socket
     const io = req.app.get("io");
     if (io) {
-      io.to(`conversation_${req.params.id}`).emit("message_read", {
+      io.to(`conversation_${req.params.id}`).emit("messages_read", {
         conversationId: req.params.id,
         userId: req.user.id,
       });

@@ -3,26 +3,33 @@ const Message = require("../models/Message");
 
 class ChatService {
   /**
-   * Get or create a conversation between two users
+   * Create a conversation linked to a booking (called automatically by BookingService)
+   * Does NOT create duplicate if one already exists for this booking.
    */
-  async getOrCreateConversation(userId, otherUserId) {
-    // Check if a conversation already exists between these two users
-    let conversation = await Conversation.findOne({
-      participants: { $all: [userId, otherUserId], $size: 2 },
-    })
-      .populate("participants", "name avatar role")
-      .populate("lastMessage");
+  async createConversationForBooking(bookingId, clientId, mcId) {
+    // Check if conversation already exists for this booking
+    let conversation = await Conversation.findOne({ bookingId });
 
     if (!conversation) {
       conversation = await Conversation.create({
-        participants: [userId, otherUserId],
+        participants: [clientId, mcId],
+        bookingId,
+        isActive: true,
       });
-      conversation = await Conversation.findById(conversation._id)
-        .populate("participants", "name avatar role")
-        .populate("lastMessage");
     }
 
     return conversation;
+  }
+
+  /**
+   * Deactivate conversation when booking is rejected
+   */
+  async deactivateByBookingId(bookingId) {
+    return Conversation.findOneAndUpdate(
+      { bookingId },
+      { isActive: false },
+      { new: true },
+    );
   }
 
   /**
@@ -34,6 +41,7 @@ class ChatService {
     })
       .populate("participants", "name avatar role")
       .populate("lastMessage")
+      .populate("bookingId", "eventName eventDate status")
       .sort({ updatedAt: -1 });
 
     return conversations;
@@ -82,10 +90,10 @@ class ChatService {
   }
 
   /**
-   * Send a message
+   * Send a message — enforces isActive check
    */
   async sendMessage(conversationId, senderId, content, type = "text") {
-    // Verify user is a participant
+    // Verify user is a participant AND conversation is active
     const conversation = await Conversation.findOne({
       _id: conversationId,
       participants: senderId,
@@ -93,6 +101,12 @@ class ChatService {
 
     if (!conversation) {
       throw new Error("Conversation not found or access denied");
+    }
+
+    if (!conversation.isActive) {
+      throw new Error(
+        "This conversation is no longer active. The booking was rejected.",
+      );
     }
 
     const message = await Message.create({

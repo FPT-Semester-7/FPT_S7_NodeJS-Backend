@@ -3,6 +3,7 @@ const scheduleRepository = require("../repositories/ScheduleRepository");
 const transactionRepository = require("../repositories/TransactionRepository");
 const mcProfileRepository = require("../repositories/MCProfileRepository");
 const notificationService = require("./NotificationService");
+const chatService = require("./ChatService");
 
 const combineDateAndTime = (dateValue, timeValue) => {
   const date = new Date(dateValue);
@@ -88,13 +89,21 @@ class BookingService {
 
     const booking = await bookingRepository.create(normalizedBooking);
 
+    // AUTO-CREATE conversation between client & MC (business rule: chat unlocked after booking)
+    await chatService.createConversationForBooking(
+      booking._id,
+      bookingData.client,
+      mcId,
+    );
+
+    // Notify MC about new booking request
     await notificationService.create(
       {
         user: mcId,
         senderId: bookingData.client,
-        title: "New booking request",
+        title: "New Booking Request",
         body: `You have a new ${booking.eventType} booking request on ${new Date(booking.eventDate).toLocaleDateString()}`,
-        type: "Booking",
+        type: "booking_request",
         relatedId: booking._id,
         relatedModel: "Booking",
         linkAction: `/m/booking-requests`,
@@ -133,9 +142,9 @@ class BookingService {
       {
         user: mcId,
         senderId: booking.client._id || booking.client,
-        title: "Escrow funds secured",
+        title: "Escrow Funds Secured",
         body: `Payment of ${booking.price?.toLocaleString()} VND for "${booking.eventName}" is now held in escrow.`,
-        type: "Payment",
+        type: "payment_escrowed",
         relatedId: booking._id,
         relatedModel: "Booking",
         linkAction: `/m/calendar?booking=${booking._id}`,
@@ -189,14 +198,15 @@ class BookingService {
       note: updated.eventName,
     });
 
+    // Notify client about booking acceptance
     const clientId = updated.client._id || updated.client;
     await notificationService.create(
       {
         user: clientId,
         senderId: mcId,
-        title: "Booking accepted",
+        title: "Booking Confirmed",
         body: `Your booking request for "${updated.eventName}" has been accepted!`,
-        type: "Booking",
+        type: "booking_confirmed",
         relatedId: updated._id,
         relatedModel: "Booking",
         linkAction: `/m/booking/${updated.mc?._id || updated.mc}`,
@@ -228,14 +238,18 @@ class BookingService {
       { decidedAt: new Date() },
     );
 
+    // Deactivate the conversation (business rule: chat closed on rejection)
+    await chatService.deactivateByBookingId(bookingId);
+
+    // Notify client about booking rejection
     const clientId = updated.client._id || updated.client;
     await notificationService.create(
       {
         user: clientId,
         senderId: mcId,
-        title: "Booking declined",
+        title: "Booking Declined",
         body: `Your booking request for "${updated.eventName}" has been declined.`,
-        type: "Booking",
+        type: "booking_cancelled",
         relatedId: updated._id,
         relatedModel: "Booking",
         linkAction: `/m/profile/${updated.mc?._id || updated.mc}`,
