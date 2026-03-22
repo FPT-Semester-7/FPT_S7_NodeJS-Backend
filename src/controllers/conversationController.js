@@ -14,6 +14,22 @@ exports.getConversations = async (req, res) => {
   }
 };
 
+exports.getConversation = async (req, res) => {
+  try {
+    const conversation = await chatService.getConversationById(
+      req.params.id,
+      req.user.id,
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: { conversation },
+    });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+};
+
 exports.getMessages = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;

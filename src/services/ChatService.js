@@ -1,14 +1,89 @@
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const Booking = require("../models/Booking");
+
+const toIdString = (value) => (value ? value.toString() : null);
 
 class ChatService {
+  async addBookingSystemMarker(conversationId, bookingId) {
+    const marker = await Message.create({
+      conversationId,
+      type: "system",
+      content: `--- Booking mới #${bookingId} bắt đầu ---`,
+      bookingId,
+    });
+
+    await Conversation.findByIdAndUpdate(conversationId, {
+      bookingId,
+      isActive: true,
+      lastMessage: marker._id,
+      updatedAt: new Date(),
+    });
+
+    return marker;
+  }
+
+  async resolveLatestBookingForParticipants(participants = []) {
+    if (!Array.isArray(participants) || participants.length < 2) {
+      return null;
+    }
+
+    const [first, second] = participants;
+    const userA = first && (first._id || first);
+    const userB = second && (second._id || second);
+    if (!userA || !userB) {
+      return null;
+    }
+
+    return Booking.findOne({
+      $or: [
+        { client: userA, mc: userB },
+        { client: userB, mc: userA },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .select("eventName eventDate status")
+      .lean();
+  }
+
+  async enrichConversation(conversationDoc) {
+    const conversation = conversationDoc.toObject
+      ? conversationDoc.toObject()
+      : conversationDoc;
+
+    const populatedCurrent =
+      conversation.bookingId && typeof conversation.bookingId === "object"
+        ? conversation.bookingId
+        : null;
+
+    const fallbackCurrent = populatedCurrent
+      ? null
+      : await this.resolveLatestBookingForParticipants(
+          conversation.participants,
+        );
+
+    const currentBooking = populatedCurrent || fallbackCurrent || null;
+    const currentBookingId = currentBooking
+      ? toIdString(currentBooking._id || currentBooking.id)
+      : conversation.bookingId
+        ? toIdString(conversation.bookingId)
+        : null;
+
+    return {
+      ...conversation,
+      currentBookingId,
+      currentBooking,
+    };
+  }
+
   /**
-   * Create a conversation linked to a booking (called automatically by BookingService)
-   * Does NOT create duplicate if one already exists for this booking.
+   * Create or reuse 1-1 conversation for a booking.
+   * If a conversation between client and MC already exists, reuse it and add a system marker.
    */
   async createConversationForBooking(bookingId, clientId, mcId) {
-    // Check if conversation already exists for this booking
-    let conversation = await Conversation.findOne({ bookingId });
+    let conversation = await Conversation.findOne({
+      participants: { $all: [clientId, mcId], $size: 2 },
+    });
 
     if (!conversation) {
       conversation = await Conversation.create({
@@ -18,7 +93,12 @@ class ChatService {
       });
     }
 
-    return conversation;
+    await this.addBookingSystemMarker(conversation._id, bookingId);
+
+    return Conversation.findById(conversation._id)
+      .populate("participants", "name avatar role")
+      .populate("lastMessage")
+      .populate("bookingId", "eventName eventDate status");
   }
 
   /**
@@ -26,7 +106,7 @@ class ChatService {
    */
   async deactivateByBookingId(bookingId) {
     return Conversation.findOneAndUpdate(
-      { bookingId },
+      { bookingId: bookingId.toString() },
       { isActive: false },
       { new: true },
     );
@@ -44,7 +124,27 @@ class ChatService {
       .populate("bookingId", "eventName eventDate status")
       .sort({ updatedAt: -1 });
 
-    return conversations;
+    return Promise.all(
+      conversations.map((conversation) =>
+        this.enrichConversation(conversation),
+      ),
+    );
+  }
+
+  async getConversationById(conversationId, userId) {
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+      participants: userId,
+    })
+      .populate("participants", "name avatar role")
+      .populate("lastMessage")
+      .populate("bookingId", "eventName eventDate status");
+
+    if (!conversation) {
+      throw new Error("Conversation not found or access denied");
+    }
+
+    return this.enrichConversation(conversation);
   }
 
   /**
