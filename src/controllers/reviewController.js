@@ -3,10 +3,12 @@ const Booking = require("../models/Booking");
 const MCProfile = require("../models/MCProfile");
 const notificationService = require("../services/NotificationService");
 
+
+
 exports.createReview = async (req, res) => {
   try {
     const { bookingId, rating, comment } = req.body;
-    const clientId = req.user ? req.user._id : req.body.clientId;
+    const clientId = req.user.id;
 
     const booking = await Booking.findById(bookingId);
     if (!booking)
@@ -80,10 +82,14 @@ exports.getMCReviews = async (req, res) => {
 exports.updateReview = async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
-    if (!review)
-      return res
-        .status(404)
-        .json({ status: "fail", message: "Review not found" });
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    // Kiểm tra quyền
+    const isOwner = review.client.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
 
     // Check if within 24 hours
     const timeDiff = new Date() - new Date(review.createdAt);
@@ -94,13 +100,22 @@ exports.updateReview = async (req, res) => {
       });
     }
 
-    const updatedReview = await Review.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true },
-    );
+    const updates = {};
+    if (Object.prototype.hasOwnProperty.call(req.body, "rating")) {
+      updates.rating = req.body.rating;
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, "comment")) {
+      updates.comment = req.body.comment;
+    }
 
-    res.status(200).json({ status: "success", data: { review: updatedReview } });
+    const updatedReview = await Review.findByIdAndUpdate(review._id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    res
+      .status(200)
+      .json({ status: "success", data: { review: updatedReview } });
   } catch (err) {
     res.status(400).json({ status: "fail", message: err.message });
   }
@@ -109,6 +124,16 @@ exports.updateReview = async (req, res) => {
 // Admin delete inappropriate review
 exports.deleteReview = async (req, res) => {
   try {
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    // Kiểm tra quyền
+    const isOwner = review.client.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
     await Review.findByIdAndDelete(req.params.id);
     res.status(204).json({ status: "success", data: null });
   } catch (err) {
