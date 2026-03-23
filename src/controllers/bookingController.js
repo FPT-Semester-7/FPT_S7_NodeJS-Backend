@@ -73,6 +73,21 @@ exports.acceptBooking = async (req, res) => {
   }
 };
 
+exports.completeBooking = async (req, res) => {
+  try {
+    bookingService.setIO(req.app.get("io"));
+    const data = await bookingService.completeBooking(
+      req.params.id,
+      req.user.id,
+    );
+    res
+      .status(200)
+      .json({ status: "success", data });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+};
+
 exports.rejectBooking = async (req, res) => {
   try {
     bookingService.setIO(req.app.get("io"));
