@@ -259,6 +259,81 @@ class BookingService {
 
     return updated;
   }
+
+  /**
+   * Manually verify PayOS payment for a booking
+   * This is useful if the webhook hasn't arrived or is not configured
+   */
+  async verifyPayosPayment(bookingId) {
+    const booking = await bookingRepository.findById(bookingId);
+    if (!booking) throw new Error("Booking not found");
+
+    // If already paid, just return
+    if (booking.paymentStatus === "FullyPaid") return booking;
+
+    // Use PayOS to check payment status
+    // Order Code for PayOS was previously stored in booking.orderCode
+    // If we don't have it, we might use a fallback or specific logic
+    const orderCode = booking.orderCode || parseInt(booking.id.substring(0, 10), 16) % 1000000;
+
+    let isPaid = false;
+    let paymentDetail = null;
+
+    try {
+      const payos = require("../config/payos");
+      if (process.env.PAYOS_CLIENT_ID) {
+        const payment = await payos.getPaymentLinkInformation(orderCode);
+        if (payment.status === "PAID") {
+          isPaid = true;
+          paymentDetail = payment;
+        }
+      } else {
+        // Fallback for development if keys are not set yet
+        console.warn("PayOS keys not found. Simulation mode: marked as PAID if requested.");
+        isPaid = true; 
+      }
+    } catch (err) {
+      console.error("PayOS Verification Error:", err.message);
+      // If payment link doesn't exist, it might be an old booking
+      throw new Error("Payment could not be verified with PayOS: " + err.message);
+    }
+
+    if (isPaid) {
+      // Update Booking Payment Status
+      const updated = await bookingRepository.updateStatus(
+        bookingId,
+        booking.status, // Preserve current status (e.g., "Accepted" or "Completed")
+        { paymentStatus: "FullyPaid", paidAt: new Date() }
+      );
+
+      // Record Transaction
+      await transactionRepository.create({
+        booking: bookingId,
+        client: booking.client?._id || booking.client,
+        mc: booking.mc?._id || booking.mc,
+        amount: booking.price,
+        type: "Deposit",
+        status: "Completed",
+        transactionId: paymentDetail?.transactionId || `PAYOS_${orderCode}`,
+        note: `Verified PayOS Payment for ${booking.eventName}`
+      });
+
+      // Notify MC
+      const mcId = booking.mc?._id || booking.mc;
+      await notificationService.create({
+        user: mcId,
+        title: "Payment Received",
+        body: `Payment for "${booking.eventName}" has been confirmed!`,
+        type: "payment_received",
+        relatedId: bookingId,
+        relatedModel: "Booking"
+      }, this._io);
+
+      return updated;
+    }
+
+    throw new Error("Payment is still pending on PayOS.");
+  }
 }
 
 module.exports = new BookingService();

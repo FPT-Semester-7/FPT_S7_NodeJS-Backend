@@ -32,5 +32,10 @@ router.post(
   restrictTo("client", "admin"),
   bookingController.payEscrow,
 );
+router.post(
+  "/verify-payos/:id",
+  restrictTo("client", "admin"),
+  bookingController.verifyPayosPayment,
+);
 
 module.exports = router;
