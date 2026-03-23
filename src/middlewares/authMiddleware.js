@@ -14,10 +14,7 @@ exports.protect = async (req, res, next) => {
         .json({ status: "fail", message: "Authentication required" });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "secret-fallback",
-    );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 
     if (!user) {
