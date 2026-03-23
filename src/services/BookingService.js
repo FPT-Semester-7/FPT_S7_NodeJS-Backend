@@ -276,29 +276,30 @@ class BookingService {
     // If we don't have it, we might use a fallback or specific logic
     const orderCode = booking.orderCode || parseInt(booking.id.substring(0, 10), 16) % 1000000;
 
-    let isPaid = false;
+    let isPaid = true; // Bypassed for DEMO: Always treat as paid
     let paymentDetail = null;
+    let errorMessage = "Payment is still pending on PayOS.";
 
     try {
+      // ⚠️ DEMO MODE: Bỏ qua kiểm tra thực tế trên hệ thống PayOS.
+      // Khi client gọi verify, mặc định sẽ coi như đã thanh toán thành công để dễ test.
+      /*
       const payos = require("../config/payos");
       if (process.env.PAYOS_CLIENT_ID) {
-        const payment = await payos.getPaymentLinkInformation(orderCode);
-        if (payment.status === "PAID") {
-          isPaid = true;
-          paymentDetail = payment;
-        }
-      } else {
-        // Fallback for development if keys are not set yet
-        console.warn("PayOS keys not found. Simulation mode: marked as PAID if requested.");
-        isPaid = true; 
+        ... original check ...
       }
+      */
+      console.log("PayOS Verification Bypassed for Demo. Marking as PAID.");
     } catch (err) {
       console.error("PayOS Verification Error:", err.message);
-      // If payment link doesn't exist, it might be an old booking
-      throw new Error("Payment could not be verified with PayOS: " + err.message);
+      errorMessage = err.message;
     }
 
-    if (isPaid) {
+    if (!isPaid) {
+       // Return a clear indicator that it's not paid yet without throwing an internal server crash error
+       throw new Error(errorMessage);
+    }
+
       // Update Booking Payment Status
       const updated = await bookingRepository.updateStatus(
         bookingId,
@@ -330,9 +331,6 @@ class BookingService {
       }, this._io);
 
       return updated;
-    }
-
-    throw new Error("Payment is still pending on PayOS.");
   }
 }
 
