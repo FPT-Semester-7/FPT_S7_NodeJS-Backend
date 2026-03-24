@@ -1,0 +1,71 @@
+[dotenv@17.3.1] injecting env (12) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+Found 7 pending bookings.
+
+Testing booking ID: 69bbed706b040e798f47d813, Price: 2000000
+Result HTTP Status: 200
+Response JSON: {
+  status: 'success',
+  data: {
+    checkoutUrl: 'https://pay.payos.vn/web/7911643b651841d992e21c2dd8fd75a7',
+    paymentLinkId: '7911643b651841d992e21c2dd8fd75a7',
+    orderCode: 360882851
+  }
+}
+
+Testing booking ID: 69bfa5eb2858c5e75b691194, Price: 4000000000
+Result HTTP Status: 200
+Response JSON: {
+  status: 'success',
+  data: {
+    checkoutUrl: 'https://pay.payos.vn/web/940212e6e5394375ac7d8a01e28fde99',
+    paymentLinkId: '940212e6e5394375ac7d8a01e28fde99',
+    orderCode: 3608987120
+  }
+}
+
+Testing booking ID: 69bfae3af6963b3fe66e4746, Price: 583478957439
+Result HTTP Status: 500
+Response JSON: {
+  status: 'fail',
+  message: 'HTTP 200, amount: amount must not be greater than 10000000000 (code: 20)'
+}
+
+Testing booking ID: 69bfb1cd7598f6d74457562f, Price: 222222222
+Result HTTP Status: 200
+Response JSON: {
+  status: 'success',
+  data: {
+    checkoutUrl: 'https://pay.payos.vn/web/43a0a25336054d70ab6357128ca596d6',
+    paymentLinkId: '43a0a25336054d70ab6357128ca596d6',
+    orderCode: 3609074221
+  }
+}
+
+Testing booking ID: 69bfb2257598f6d744575749, Price: 1.1111111111111222e+21
+Result HTTP Status: 500
+Response JSON: {
+  status: 'fail',
+  message: 'HTTP 200, amount: amount must not be greater than 10000000000 (code: 20)'
+}
+
+Testing booking ID: 69c15c2308e415e20a972274, Price: 20000000
+Result HTTP Status: 200
+Response JSON: {
+  status: 'success',
+  data: {
+    checkoutUrl: 'https://pay.payos.vn/web/31566758a0244c01be2d3215c6304f6a',
+    paymentLinkId: '31566758a0244c01be2d3215c6304f6a',
+    orderCode: 3609167615
+  }
+}
+
+Testing booking ID: 69c227814327be9ac75d2c81, Price: 10000000
+Result HTTP Status: 200
+Response JSON: {
+  status: 'success',
+  data: {
+    checkoutUrl: 'https://pay.payos.vn/web/77a4f99b797b409e8b38ba3e83e21a18',
+    paymentLinkId: '77a4f99b797b409e8b38ba3e83e21a18',
+    orderCode: 3609262428
+  }
+}
