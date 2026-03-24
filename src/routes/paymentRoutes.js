@@ -1,26 +1,15 @@
 const express = require("express");
 const paymentController = require("../controllers/paymentController");
-const { authenticate, authorize } = require("../middlewares/authMiddleware");
+const { protect } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post(
-  "/",
-  authenticate,
-  authorize(["client", "mc", "admin"]),
-  paymentController.createPayment,
-);
-router.get(
-  "/history/:userId",
-  authenticate,
-  authorize(["client", "mc", "admin"]),
-  paymentController.getPaymentHistory,
-);
-router.patch(
-  "/:id",
-  authenticate,
-  authorize(["client", "mc", "admin"]),
-  paymentController.updatePaymentStatus,
-); // Typically admin or webhook
+// PayOS webhook: xác thực bằng chữ ký HMAC, KHÔNG dùng JWT.
+router.post("/webhook/payos", paymentController.handlePayOSWebhook);
+
+// Các route cần đăng nhập
+router.post("/create-link", protect, paymentController.createPaymentLink);
+router.get("/history", protect, paymentController.getPaymentHistory);
+router.get("/status/:orderCode", protect, paymentController.checkPaymentStatus);
 
 module.exports = router;

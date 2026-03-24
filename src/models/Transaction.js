@@ -16,7 +16,10 @@ const transactionSchema = new mongoose.Schema({
         default: 'Pending',
     },
     platformFee: { type: Number, default: 0 },
-    transactionId: { type: String } // from VNPAY, Momo, Stripe...
+    transactionId: { type: String }, // from VNPAY, Momo, Stripe...
+    payosOrderCode: { type: Number }, // PayOS order code
+    payosPaymentLinkId: { type: String }, // PayOS payment link ID
+    paidAt: { type: Date }, // Thời điểm thanh toán thành công
 }, { timestamps: true });
 
 module.exports = mongoose.model('Transaction', transactionSchema);
