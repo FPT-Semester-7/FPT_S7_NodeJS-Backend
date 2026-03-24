@@ -9,10 +9,14 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const http = require("http");
-const { Server } = require("socket.io");
+const {
+  Server
+} = require("socket.io");
 const jwt = require("jsonwebtoken");
 
-const env = require("./config/env");
+dotenv.config();
+
+const env = process.env;
 
 if (!process.env.JWT_SECRET) {
   console.error("FATAL: JWT_SECRET is required");
@@ -135,7 +139,9 @@ io.on("connection", (socket) => {
       onlineUsers.get(userId).add(socket.id);
 
       // Broadcast online status
-      io.emit("user_online", { userId });
+      io.emit("user_online", {
+        userId
+      });
 
       console.log(`User ${userId} authenticated (socket: ${socket.id})`);
     } catch (err) {
@@ -200,7 +206,9 @@ io.on("connection", (socket) => {
         sockets.delete(socket.id);
         if (sockets.size === 0) {
           onlineUsers.delete(userId);
-          io.emit("user_offline", { userId });
+          io.emit("user_offline", {
+            userId
+          });
         }
       }
     }
@@ -218,4 +226,8 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 // Export app và server để phục vụ mục đích kiểm thử (Testing)
-module.exports = { app, server, io };
+module.exports = {
+  app,
+  server,
+  io
+};
