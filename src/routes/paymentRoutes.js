@@ -11,5 +11,6 @@ router.post("/webhook/payos", paymentController.handlePayOSWebhook);
 router.post("/create-link", protect, paymentController.createPaymentLink);
 router.get("/history", protect, paymentController.getPaymentHistory);
 router.get("/status/:orderCode", protect, paymentController.checkPaymentStatus);
+router.post("/demo-pay/:bookingId", protect, paymentController.demoPay);
 
 module.exports = router;

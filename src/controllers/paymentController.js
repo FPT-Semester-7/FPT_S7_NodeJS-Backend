@@ -184,3 +184,46 @@ exports.checkPaymentStatus = async (req, res) => {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
+
+/**
+ * POST /api/v1/payments/demo-pay/:bookingId
+ * Dành rành cho Demo, click và tự update mà không cần gọi API thật.
+ */
+exports.demoPay = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    
+    const transaction = await Transaction.findOne({ booking: bookingId, status: "Pending" });
+    if (transaction) {
+      transaction.status = "Completed";
+      transaction.paidAt = new Date();
+      transaction.transactionId = "DEMO-PAY";
+      await transaction.save();
+    }
+    
+    const booking = await Booking.findByIdAndUpdate(bookingId, {
+      paymentStatus: "Paid",
+    });
+
+    if (booking) {
+      const io = req.app.get("io");
+      await notificationService.create(
+        {
+          user: booking.mc,
+          senderId: req.user.id,
+          title: "Payment Received",
+          body: `Payment of ${booking.price?.toLocaleString()} VND has been confirmed (Demo).`,
+          type: "payment_escrowed",
+          relatedId: booking._id,
+          relatedModel: "Booking",
+          linkAction: `/m/wallet`,
+        },
+        io,
+      );
+    }
+    
+    res.status(200).json({ status: "success" });
+  } catch (err) {
+    res.status(500).json({ status: "fail", message: err.message });
+  }
+};

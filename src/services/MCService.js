@@ -17,12 +17,6 @@ const dashboardCache = new Map();
 
 class MCService {
   async getDashboardStats(userId) {
-    const now = Date.now();
-    const cached = dashboardCache.get(userId);
-    if (cached && cached.expiresAt > now) {
-      return cached.data;
-    }
-
     const [
       profile,
       totalBookings,
@@ -38,7 +32,7 @@ class MCService {
       Booking.countDocuments({ mc: userId, status: "Pending" }),
       Review.aggregate([
         { $match: { mc: new mongoose.Types.ObjectId(userId) } },
-        { $group: { _id: null, avgRating: { $avg: "$rating" } } }
+        { $group: { _id: null, avgRating: { $avg: "$rating" }, totalReviews: { $sum: 1 } } }
       ])
     ]);
 
@@ -49,6 +43,7 @@ class MCService {
     if (profile?.price) completionScore += 20;
 
     const avgRating = ratingResult.length > 0 ? Number(ratingResult[0].avgRating.toFixed(1)) : 5.0;
+    const totalReviews = ratingResult.length > 0 ? ratingResult[0].totalReviews : 0;
 
     const result = {
       profileStatus: profile ? profile.status : "Unavailable",
@@ -56,13 +51,15 @@ class MCService {
       stats: {
         totalBookings,
         activeInquiries: activeInquiries,
-        profileViews: avgRating, 
+        avgRating,
+        totalReviews,
         revenue: walletStats.totalRevenue,
+        available: walletStats.available,
+        escrow: walletStats.escrow,
       },
       isVerified: user ? user.isVerified : false,
     };
 
-    dashboardCache.set(userId, { data: result, expiresAt: now + 5 * 60 * 1000 });
     return result;
   }
 
