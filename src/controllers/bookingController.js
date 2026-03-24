@@ -117,3 +117,14 @@ exports.payEscrow = async (req, res) => {
     res.status(400).json({ status: "fail", message: err.message });
   }
 };
+
+exports.verifyPayosPayment = async (req, res) => {
+  try {
+    bookingService.setIO(req.app.get("io"));
+    const booking = await bookingService.verifyPayosPayment(req.params.id);
+    res.status(200).json({ status: "success", data: { booking: new BookingDTO(booking) } });
+  } catch (err) {
+    res.status(400).json({ status: "fail", message: err.message });
+  }
+};
+
