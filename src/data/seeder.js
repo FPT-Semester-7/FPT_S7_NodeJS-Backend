@@ -18,7 +18,8 @@ const {
     Notification,
     Message,
     Schedule,
-    WithdrawalRequest
+    WithdrawalRequest,
+    Conversation
 } = require('../models');
 
 // Import dữ liệu mẫu từ JSON
@@ -47,7 +48,8 @@ const seedData = async () => {
             Notification.deleteMany(),
             Message.deleteMany(),
             Schedule.deleteMany(),
-            WithdrawalRequest.deleteMany()
+            WithdrawalRequest.deleteMany(),
+            Conversation.deleteMany()
         ]);
 
         // 2. Nạp Users
@@ -158,14 +160,23 @@ const seedData = async () => {
         }));
         await Notification.insertMany(notifications);
 
-        // 11. Tạo Messages (Tin nhắn chat)
+        // 11. Tạo Conversations & Messages (Tin nhắn chat)
         console.log('Đang nạp lịch sử chat mẫu...');
-        const messages = Array.from({ length: 10 }).map((_, i) => ({
-            booking: createdBookings[0]._id,
-            sender: i % 2 === 0 ? createdBookings[0].client : createdBookings[0].mc,
-            receiver: i % 2 !== 0 ? createdBookings[0].client : createdBookings[0].mc,
-            content: i % 2 === 0 ? 'Chào bạn, tôi muốn trao đổi về kịch bản tiệc tối nay.' : 'Vâng, tôi đã nhận được thông tin, lát tôi sẽ gửi bản thảo cho bạn.'
+        const conversations = createdBookings.slice(0, 5).map(b => ({
+            participants: [b.client, b.mc],
+            bookingId: b._id
         }));
+        const createdConvs = await Conversation.insertMany(conversations);
+
+        const messages = Array.from({ length: 15 }).map((_, i) => {
+            const conv = createdConvs[i % createdConvs.length];
+            return {
+                conversationId: conv._id,
+                senderId: i % 2 === 0 ? conv.participants[0] : conv.participants[1],
+                content: i % 2 === 0 ? 'Chào bạn, tôi muốn trao đổi về dự án S7.' : 'Vâng, tôi đã nhận được thông tin, lát tôi sẽ phản hồi.',
+                type: 'text'
+            };
+        });
         await Message.insertMany(messages);
 
         // 12. Tạo Schedule (Lịch biểu bận/rảnh)
