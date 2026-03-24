@@ -6,7 +6,15 @@ const router = express.Router();
 
 router.get("/mc/:mcId", reviewController.getMCReviews);
 router.post("/", protect, reviewController.createReview);
-router.patch("/:id", protect, reviewController.updateReview);
-router.delete("/:id", protect, reviewController.deleteReview); // typically admin only
+router.patch(
+  "/:id",
+  protect,
+  reviewController.updateReview,
+);
+router.delete(
+  "/:id",
+  protect,
+  reviewController.deleteReview,
+);
 
 module.exports = router;

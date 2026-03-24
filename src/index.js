@@ -12,17 +12,39 @@ const http = require("http");
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 
-// Nạp các biến môi trường từ file .env
-dotenv.config();
+const env = require("./config/env");
+
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET is required");
+  process.exit(1);
+}
 
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = env.ALLOWED_ORIGINS;
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
 // Khởi tạo Socket.io để xử lý Chat thời gian thực
 const io = new Server(server, {
   cors: {
-    origin: "*", // Cho phép tất cả các nguồn truy cập (Cần siết lại khi Production)
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -30,7 +52,6 @@ const io = new Server(server, {
 app.set("io", io);
 
 // --- Cấu hình Middleware ---
-app.use(cors()); // Cho phép chia sẻ tài nguyên giữa các domain khác nhau
 app.use(express.json()); // Cho phép server đọc dữ liệu định dạng JSON từ Request Body
 
 // --- Khai báo các Routes (Đường dẫn API) ---
@@ -65,11 +86,7 @@ app.use("/api/v1/conversations", conversationRoutes); // Chat / Tin nhắn
  */
 const connectDB = async () => {
   try {
-    const defaultUri = "mongodb://localhost:27017/booking-mc";
-    // Ưu tiên lấy URI từ môi trường, nếu không có sẽ dùng mặc định local
-    await mongoose.connect(
-      process.env.MONGODB_URI || process.env.MONGO_URI || defaultUri,
-    );
+    await mongoose.connect(env.MONGODB_URI);
     console.log(`MongoDB Connected successfully!`);
   } catch (err) {
     console.error(`Error connecting to MongoDB: ${err.message}`);
@@ -104,10 +121,7 @@ io.on("connection", (socket) => {
 
   if (token) {
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "secret-fallback",
-      );
+      const decoded = jwt.verify(token, env.JWT_SECRET);
       userId = decoded.id;
       socket.userId = userId;
 
@@ -194,7 +208,7 @@ io.on("connection", (socket) => {
 });
 
 // --- Khởi động Server ---
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 // Chỉ chạy listener nếu không phải trong môi trường Test
 if (process.env.NODE_ENV !== "test") {

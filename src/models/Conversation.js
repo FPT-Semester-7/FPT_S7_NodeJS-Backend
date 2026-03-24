@@ -12,7 +12,7 @@ const conversationSchema = new mongoose.Schema(
     bookingId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
-      required: true,
+      required: false,
     },
     lastMessage: {
       type: mongoose.Schema.Types.ObjectId,

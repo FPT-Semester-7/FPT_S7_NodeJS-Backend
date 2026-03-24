@@ -119,22 +119,17 @@ class BookingService {
     if (!booking) throw new Error("Booking not found");
 
     await transactionRepository.create({
-      booking: booking._id,
-      client: booking.client._id || booking.client,
-      mc: booking.mc._id || booking.mc,
+      bookingId: booking._id,
+      clientId: booking.client._id || booking.client,
+      mcId: booking.mc._id || booking.mc,
       amount: booking.price,
       type: "Deposit",
-      status: "Completed",
-      transactionId: paymentDetails?.transactionId,
+      status: "Pending",
+      payosOrderCode:
+        paymentDetails?.payosOrderCode || paymentDetails?.orderCode,
+      payosPaymentUrl:
+        paymentDetails?.payosPaymentUrl || paymentDetails?.checkoutUrl,
     });
-
-    const updated = await bookingRepository.updateStatus(
-      bookingId,
-      booking.status,
-      {
-        paymentStatus: "DepositPaid",
-      },
-    );
 
     // Notify MC about escrow payment
     const mcId = booking.mc?._id || booking.mc;
@@ -142,8 +137,8 @@ class BookingService {
       {
         user: mcId,
         senderId: booking.client._id || booking.client,
-        title: "Escrow Funds Secured",
-        body: `Payment of ${booking.price?.toLocaleString()} VND for "${booking.eventName}" is now held in escrow.`,
+        title: "Payment Request Created",
+        body: `A PayOS payment request for ${booking.price?.toLocaleString()} VND has been created for "${booking.eventName}".`,
         type: "payment_escrowed",
         relatedId: booking._id,
         relatedModel: "Booking",
@@ -152,7 +147,7 @@ class BookingService {
       this._io,
     );
 
-    return updated;
+    return booking;
   }
 
   async getMyBookings(userId, role) {
@@ -215,6 +210,64 @@ class BookingService {
     );
 
     return updated;
+  }
+
+  async completeBooking(bookingId, mcId) {
+    const booking = await bookingRepository.findById(bookingId);
+    if (!booking) throw new Error("Booking not found");
+
+    const bookingMCId = booking.mc?._id
+      ? booking.mc._id.toString()
+      : booking.mc.toString();
+    if (bookingMCId !== mcId) {
+      throw new Error("You do not have permission to complete this booking");
+    }
+
+    if (booking.status !== "Accepted") {
+      throw new Error("Only accepted bookings can be completed");
+    }
+
+    const payOSService = require("./PayOSService");
+    const description = `Booking ${booking._id.toString().substring(0, 8)}`;
+    const amount = booking.price;
+
+    const paymentData = await payOSService.createPaymentLink(
+      booking._id,
+      amount,
+      description
+    );
+
+    const transaction = await transactionRepository.create({
+      bookingId: booking._id,
+      clientId: booking.client._id || booking.client,
+      mcId: booking.mc._id || booking.mc,
+      amount: amount,
+      type: "FinalPayment",
+      status: "Pending",
+      payosOrderCode: paymentData.orderCode,
+      payosPaymentUrl: paymentData.paymentUrl,
+    });
+
+    const clientId = booking.client._id || booking.client;
+    await notificationService.create(
+      {
+        user: clientId,
+        senderId: mcId,
+        title: "Booking Completed & Payment Required",
+        body: `MC has completed "${booking.eventName}". Please proceed with the payment.`,
+        type: "payment_escrowed",
+        relatedId: booking._id,
+        relatedModel: "Booking",
+        linkAction: `/m/booking/${booking._id}`,
+      },
+      this._io,
+    );
+
+    return {
+      paymentUrl: paymentData.paymentUrl,
+      qrCode: paymentData.qrCode,
+      orderCode: paymentData.orderCode,
+    };
   }
 
   async rejectBooking(bookingId, mcId) {

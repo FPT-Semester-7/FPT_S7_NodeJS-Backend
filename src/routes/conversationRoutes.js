@@ -9,6 +9,7 @@ router.use(protect);
 
 // NOTE: No POST "/" — conversations are ONLY auto-created when a booking is created
 router.get("/", conversationController.getConversations);
+router.get("/:id", conversationController.getConversation);
 router.get("/:id/messages", conversationController.getMessages);
 router.post("/:id/messages", conversationController.sendMessage);
 router.patch("/:id/read", conversationController.markAsRead);

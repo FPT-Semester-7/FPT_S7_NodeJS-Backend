@@ -10,13 +10,17 @@ const messageSchema = new mongoose.Schema(
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     content: { type: String, required: true },
     type: {
       type: String,
-      enum: ["text", "image", "file"],
+      enum: ["text", "image", "file", "system"],
       default: "text",
+    },
+    bookingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
     },
     readBy: [
       {

@@ -23,6 +23,11 @@ router.put(
   bookingController.acceptBooking,
 );
 router.put(
+  "/:id/complete",
+  restrictTo("mc", "admin"),
+  bookingController.completeBooking,
+);
+router.put(
   "/:id/reject",
   restrictTo("mc", "admin"),
   bookingController.rejectBooking,
