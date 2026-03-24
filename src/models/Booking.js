@@ -42,7 +42,7 @@ const bookingSchema = new mongoose.Schema(
     // Trạng thái thanh toán
     paymentStatus: {
       type: String,
-      enum: ["Pending", "DepositPaid", "FullyPaid", "Refunded", "Paid"],
+      enum: ["Pending", "Paid", "DepositPaid", "FullyPaid", "Refunded"],
       default: "Pending",
     },
     decidedAt: { type: Date },
