@@ -36,7 +36,7 @@ const bookingSchema = new mongoose.Schema(
     // Trạng thái đơn đặt lịch
     status: {
       type: String,
-      enum: ["Pending", "Accepted", "Completed", "Cancelled", "Rejected"],
+      enum: ["Pending", "Accepted", "Completed", "Cancelled", "Rejected", "Paid"],
       default: "Pending",
     },
     // Trạng thái thanh toán

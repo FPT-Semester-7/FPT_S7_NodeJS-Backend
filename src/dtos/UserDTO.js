@@ -32,6 +32,8 @@ class UserDTO {
       password: body.password,
       role: body.role,
       phoneNumber: body.phoneNumber,
+      // MC đăng ký tự do nhưng luôn ở trạng thái chưa duyệt.
+      isVerified: false,
     };
   }
 }
